@@ -22,7 +22,6 @@ Servo myservo;
 byte pos = 180;
 long posX = 0;
 long posY = 0;
-int nextBit = 0;
 
 long TotStepsX = 0;
 long TotStepsYp = 0;
@@ -187,10 +186,14 @@ void Tekenen() {
       posY = 0;
       posX = posX + 1;
     }
-    else
+    else if(posX != ResX)
     {
       Step(LOW,DirY,StepY,(TotStepsY/ResY));
       posY = posY + 1;
+    }
+    else if (posY >= ResX and posY >= ResY)
+    {
+      Done = 2;
     }
   } else if (digitalRead(PinStart) == 1)
   {
@@ -220,6 +223,9 @@ void loop()
     Serial.println(TotStepsY);
     Done = 1;    //Varibale om te zeggen dat het totale aantal stappen gemeten is
   }
+  if(Done == 1)
+  {
   while (digitalRead(PinStart) == 1) {}
   Tekenen();
+  }
 }
