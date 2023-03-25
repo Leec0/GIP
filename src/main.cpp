@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <Servo.h>
-#include "variable.hpp"
+#include "sjb-logo.hpp"
 
 const byte StepX = 2;
 const byte DirX = 5;
