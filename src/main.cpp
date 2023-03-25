@@ -186,7 +186,7 @@ void Tekenen() {
       posY = 0;
       posX = posX + 1;
     }
-    else if(posX != ResX)
+    else if(posY < ResY)
     {
       Step(LOW,DirY,StepY,(TotStepsY/ResY));
       posY = posY + 1;
@@ -225,7 +225,10 @@ void loop()
   }
   if(Done == 1)
   {
-  while (digitalRead(PinStart) == 1) {}
-  Tekenen();
+    while (digitalRead(PinStart) == 1) {}
+    while (Done != 2)
+    {
+      Tekenen();
+    }
   }
 }
