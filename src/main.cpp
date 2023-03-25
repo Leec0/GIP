@@ -154,7 +154,7 @@ void Tekenen() {
     {
       spuitkop();
     }
-    for (int i = posX*ResY+posY+1; i < (posX+1)*ResY; i++)
+    for (int i = posX*ResY+posY+1; i >= (posX+1)*ResY-1; i++)
     {
       if (image[i] == 0)
       {
