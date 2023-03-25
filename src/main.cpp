@@ -13,11 +13,6 @@ const byte PinEndYm = 12; //SpnEn pin CNC Shield boven kant
 const byte PinEndYp = 10; //Y end stop pin CNC Shield onder kant
 const byte PinStart = 16; //HOLD pin CNC Shield
 
-byte StateEndXm = 0;
-byte StateEndXp = 0;
-byte StateEndYm = 0;
-byte StateEndYp = 0;
-
 Servo myservo;  
 byte pos = 180;
 long posX = 0;
@@ -99,8 +94,7 @@ void TotalStepsY()
     delayMicroseconds(50);
     digitalWrite(StepY,LOW);
     delayMicroseconds(50);
-    StateEndYp = digitalRead(PinEndYp);
-  } while(StateEndYp == 0);
+  } while(digitalRead(PinEndYp) == 0);
   delay(3);
   digitalWrite(DirY,HIGH);
   do                          //Beweeg naar boven tot end switch en telt bij elke stap
@@ -110,8 +104,7 @@ void TotalStepsY()
     digitalWrite(StepY,LOW);
     delayMicroseconds(50);
     TotStepsY++;
-    StateEndYm = digitalRead(PinEndYm);
-  } while(StateEndYm == 0);
+  } while(digitalRead(PinEndYm) == 0);
 }
 
 void TotalSteps()
@@ -123,8 +116,7 @@ void TotalSteps()
     delayMicroseconds(50);
     digitalWrite(StepY,LOW);
     delayMicroseconds(50);
-    StateEndYm = digitalRead(PinEndYm);
-  } while(StateEndYm == 0);
+  } while(digitalRead(PinEndYm) == 0);
   TotStepsX = 0;                  //Reset het Totaal aantal steps
   digitalWrite(DirX,HIGH);
   do                              //Motor gaat naar niet motor kant bewegen tot end switch
@@ -133,8 +125,7 @@ void TotalSteps()
     delayMicroseconds(50);
     digitalWrite(StepX,LOW);
     delayMicroseconds(50);
-    StateEndXm = digitalRead(PinEndXm);
-  } while(StateEndXm == 0);
+  } while(digitalRead(PinEndXm) == 0);
   TotalStepsY();
   TotStepsYm = TotStepsY; 
   digitalWrite(DirX,LOW);
@@ -145,8 +136,7 @@ void TotalSteps()
     digitalWrite(StepX,LOW);
     delayMicroseconds(50);
     TotStepsX++;
-    StateEndXp = digitalRead(PinEndXp);
-  } while(StateEndXp == 0);
+  } while(digitalRead(PinEndXp) == 0);
   TotalStepsY();
   TotStepsYp = TotStepsY;
   Serial.println("Stappen tellen klaar.");
@@ -180,8 +170,7 @@ void Tekenen() {
         delayMicroseconds(50);
         digitalWrite(StepY,LOW);
         delayMicroseconds(50);
-        StateEndYm = digitalRead(PinEndYm);
-      } while(StateEndYm == 0);
+      } while(digitalRead(PinEndYm) == 0);
       Step(HIGH,DirX,StepX,(TotStepsX/ResX));
       posY = 0;
       posX = posX + 1;
@@ -230,5 +219,6 @@ void loop()
     {
       Tekenen();
     }
+    Serial.println("Tekening klaar");
   }
 }
