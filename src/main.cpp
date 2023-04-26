@@ -22,8 +22,9 @@ long TotStepsX = 0;
 long TotStepsYp = 0;
 long TotStepsYm = 0;
 long TotStepsY = 0;
-byte Done = 0;
+int Done = 0;
 byte pause = 0;
+byte Skip = 0;
 
 /*
 Idee Foto naar matrix: programma LCD Image convertor gebruiken voor een matrix te krijgen
@@ -53,6 +54,10 @@ void setup()
   Serial.begin(9600);
 
   myservo.attach(ServoPin);       // Servo pin 11 (Z End Stop CNC Shield)
+
+  Done = 0;
+  Skip = 0;
+  pause = 0;
 }
 
 void spuitkop() 
@@ -142,7 +147,8 @@ void TotalSteps()
   Serial.println("Stappen tellen klaar.");
 }
 
-void Tekenen() {
+void Tekenen()
+{
   if (pause == 0)
   {
     if (digitalRead(PinStart) == 1)
@@ -150,17 +156,24 @@ void Tekenen() {
       pause = 1;
       while (digitalRead(PinStart) == 0) {}
     }
-    if (image[(posX)*ResY+posY] == 1)
+    if (image[posX*ResY+posY] == 1)
     {
-      spuitkop();
+      Serial.println("Spuit");
+      /*spuitkop();*/
     }
+    Skip = 0;
     for (int i = posX*ResY+posY+1; i >= (posX+1)*ResY-1; i++)
+    {if (Skip == 1)
     {
       if (image[i] == 0)
       {
-        posY = ResY;
+        Skip = 1;
       }
-    }
+      else if (image[i] == 1)
+      {
+        Skip = 0;
+      }
+    }}
     if (posY >= ResY)
     {
       digitalWrite(DirY,HIGH);
@@ -179,12 +192,16 @@ void Tekenen() {
     {
       Step(LOW,DirY,StepY,(TotStepsY/ResY));
       posY = posY + 1;
-    }
-    else if (posY >= ResX and posY >= ResY)
+    } 
+    else if (posX >= ResX)
     {
-      Done = 2;
+      if (posY >= ResY)
+      {
+        Done = 2;
+      }
     }
-  } else if (digitalRead(PinStart) == 1)
+  }
+  else if (digitalRead(PinStart) == 1)
   {
     pause = 0;
     while (digitalRead(PinStart) == 0) {}
@@ -193,16 +210,18 @@ void Tekenen() {
 
 void loop()
 {
-  if(Done != 1) //Programma om totaal aantal stappen te tellen als dat nog niet gebeurd is;
+  if (Done == 0)
   {
+    Serial.println("Wachten voor Cali");
     while (digitalRead(PinStart) == 1) {} //Wacht tot de start knop wordt ingedrukt
+    Serial.println("Cali");
     TotalSteps();
     if (TotStepsYm < TotStepsYp) //Kijkt aan welke kant het aantal y stappen het kleinst is
     {
       TotStepsY = TotStepsYm - 5000;
     } else if (TotStepsYp <= TotStepsYm)
     {
-      TotStepsY = TotStepsYp - 5000;
+     TotStepsY = TotStepsYp - 5000;
     }
     posX = 0;
     posY = 0;
@@ -212,13 +231,15 @@ void loop()
     Serial.println(TotStepsY);
     Done = 1;    //Varibale om te zeggen dat het totale aantal stappen gemeten is
   }
-  if(Done == 1)
+  else if (Done != 0)
   {
+    Serial.println("Wachten voor Tekenen");
     while (digitalRead(PinStart) == 1) {}
-    while (Done != 2)
+    Serial.println("Starten Tekenen");
+    do
     {
       Tekenen();
-    }
+    } while (Done != 2);
     Serial.println("Tekening klaar");
   }
 }

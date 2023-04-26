@@ -1,4 +1,4 @@
 #include "Arduino.h"
-extern byte image[];
-extern byte ResY;
-extern byte ResX;
+extern byte image[4096];
+extern int ResY;
+extern int ResX;
