@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Servo.h>
+#include <avr/pgmspace.h>
 #include "sjb-logo.hpp"
 
 const byte StepX = 2;
@@ -25,11 +26,10 @@ long TotStepsY = 0;
 byte Done = 0;
 byte pause = 0;
 byte Skip = 0;
-byte Spuit = 0;
 
-byte test[6] = {0,0,0,0,1,1};
-
-/*byte test[4096] = {
+/*int ResY = 64;
+int ResX = 64;
+const byte image[4096] PROGMEM = {
   0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 
   0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 
   0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 
@@ -94,7 +94,8 @@ byte test[6] = {0,0,0,0,1,1};
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   
- };*/
+ };
+*/
 
 /*
 Idee Foto naar matrix: programma LCD Image convertor gebruiken voor een matrix te krijgen
@@ -226,8 +227,7 @@ void Tekenen()
       pause = 1;
       while (digitalRead(PinStart) == 0) {}
     }
-    Serial.write(image[posX*ResX+posY]);
-    Spuit = Serial.read();
+    uint8_t Spuit = pgm_read_byte(&image[posX*ResX+posY]);
     if (Spuit == 1)
     {
       spuitkop();
@@ -235,8 +235,7 @@ void Tekenen()
     Skip = 1;
     for (int i = posX*ResY+posY+1; i >= (posX+1)*ResY-1; i++ and Skip == 1)
     {
-      Serial.write(image[posX*ResX+posY]);
-      Spuit = Serial.read();
+      uint8_t Spuit = pgm_read_byte(&image[posX*ResX+posY]);
       if (Spuit == 0)
       {
         Skip = 1;
@@ -246,7 +245,7 @@ void Tekenen()
         Skip = 0;
       }
     }
-    if (posY >= ResY)
+    if (posY >= ResY or Skip == 1)
     {
       digitalWrite(DirY,HIGH);
       do                          //Beweeg naar boven tot end switch
@@ -258,19 +257,16 @@ void Tekenen()
       } while(digitalRead(PinEndYm) == 0);
       Step(HIGH,DirX,StepX,(TotStepsX/ResX));
       posY = 0;
-      posX = posX + 1;
+      posX++;
     }
     else if(posY < ResY)
     {
       Step(LOW,DirY,StepY,(TotStepsY/ResY));
-      posY = posY + 1;
+      posY++;
     } 
-    else if (posX >= ResX)
+    else if (posX >= ResX and posY >= ResY)
     {
-      if (posY >= ResY)
-      {
-        Done = 2;
-      }
+      Done = 2;
     }
   }
   else if (digitalRead(PinStart) == 1)
