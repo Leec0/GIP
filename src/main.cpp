@@ -15,7 +15,7 @@ const byte PinEndYp = 10; //Y end stop pin CNC Shield onder kant
 const byte PinStart = 16; //HOLD pin CNC Shield
 
 Servo myservo;  //instellingen voor Servo
-byte pos = 180; //positie variabele voor Servo
+byte pos = 80; //positie variabele voor Servo
 
 long posX = 0;  //positie variabele voor de Spuitkop
 long posY = 0;
@@ -128,6 +128,8 @@ void setup()    //Alle pinnen juist instellen
 
   myservo.attach(ServoPin);   //instellen pin voor Servo motor
 
+  myservo.write(80);
+
   Done = 0;   //Variabele Reseten naar 0
   Skip = 0;
   pause = 0;
@@ -137,13 +139,11 @@ void spuitkop()   //Programma dat de spuitkop 1 keer laat spuiten
 {
   for (pos = 80; pos >= 50; pos -= 1) {      // goes from 80 degrees to 50 degrees
     myservo.write(pos);                      // tell servo to go to position in variable 'pos'
-    Serial.println(pos);
     delay(15);                               // waits 15ms for the servo to reach the position
   }
   delay(50);
     for (pos = 50; pos <= 80; pos += 1) {   // goes from 50 degrees to 80 degrees
     myservo.write(pos);                     // tell servo to go to position in variable 'pos'
-    Serial.println(pos);
     delay(15);                              // waits 15ms for the servo to reach the position
   }
   delay(100);
@@ -196,17 +196,17 @@ void TotalSteps() //Programma om het totaal aanstal stappen te meten
     delayMicroseconds(50);
   } while(digitalRead(PinEndYm) == 0);
   TotStepsX = 0;                  //Reset het Totaal aantal steps
-  digitalWrite(DirX,HIGH);
+  digitalWrite(DirX,LOW);
   do                              //Motor gaat naar niet motor kant bewegen tot end switch
   {
     digitalWrite(StepX,HIGH);
     delayMicroseconds(50);
     digitalWrite(StepX,LOW);
     delayMicroseconds(50);
-  } while(digitalRead(PinEndXm) == 0);
+  } while(digitalRead(PinEndXp) == 0);
   TotalStepsY();                  //Het programma voor de verticale stappen te meten wordt gestart
   TotStepsYm = TotStepsY;         //Het totaal aantal stappen in de Verticale richting wordt opgeslagen
-  digitalWrite(DirX,LOW);
+  digitalWrite(DirX,HIGH);
   do                              //Motor gaat naar de ander kant bewegen tot end switch en telt bij elke stap
   {
     digitalWrite(StepX,HIGH);
@@ -214,7 +214,7 @@ void TotalSteps() //Programma om het totaal aanstal stappen te meten
     digitalWrite(StepX,LOW);
     delayMicroseconds(50);
     TotStepsX++;
-  } while(digitalRead(PinEndXp) == 0);
+  } while(digitalRead(PinEndXm) == 0);
   TotalStepsY();                //Het programma voor de verticale stappen te meten wordt gestart
   TotStepsYp = TotStepsY;       //Het totaal aantal stappen in de Verticale richting wordt opgeslagen
   Serial.println("Stappen tellen klaar.");
@@ -233,9 +233,9 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
     if (Pixel == 1) //Controleer of die waarde overeenkomt met een 1
     {
       spuitkop();   //Als die waarde 1 is Spuit op die positie
+      Skip = 1;
     }
-    Skip = 1; //Reset de skip Var
-    for (long i = posX*ResY+posY+1; i >= (posX+1)*ResY-1; i++ and Skip == 1) //Loop om te controleren of de reste van een kolom leeg is
+    /*for (long i = posX*ResY+posY+1; i >= (posX+1)*ResY-1; i++ and Skip == 1) //Loop om te controleren of de reste van een kolom leeg is
     {                                                                        //Loopt tot de hele rij is gecontroleerd en stopt als er nog in positie is die wel gespuit moet worden
       uint8_t Pixel = pgm_read_byte(&image[i]);
       if (Pixel == 0) //Controle Pixel Foto = leeg?
@@ -246,8 +246,14 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
       {
         Skip = 0;           //indien waar maak de Skip var 0 en stop met verdere controle
       }
+    }*/
+    Serial.println(posY);
+    Serial.println(posX);
+    if (posX >= ResX and posY >= ResY)   //Controleer of de Spuitbak De laatste positie heeft bereikt
+    {
+      Done = 2; //Eindig het psuit programma
     }
-    if (posY >= ResY or Skip == 1)  //Controleer of de Spuitkop op het einde is in de verticale positie
+    else if (posY >= ResY)  //Controleer of de Spuitkop op het einde is in de verticale positie
     {
       digitalWrite(DirY,HIGH);
       do                          //Beweeg naar boven tot end switch
@@ -257,19 +263,16 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
         digitalWrite(StepY,LOW);
         delayMicroseconds(50);
       } while(digitalRead(PinEndYm) == 0);
-      Step(HIGH,DirX,StepX,(TotStepsX/ResX)); //Beweeg de spuitbak horizontaal 1 positie
+      Step(LOW,DirX,StepX,(TotStepsX/ResX)); //Beweeg de spuitbak horizontaal 1 positie
       posY = 0;
-      posX++; //Maak de Var 1 waarde hoger
+      posX = posX+1; //Maak de Var 1 waarde hoger
+      Skip = 1;
     }
     else if(posY < ResY)  //Controleer of de Spuitkop nog niet op het einde is in verticale positie
     {
       Step(LOW,DirY,StepY,(TotStepsY/ResY));  //Beweeg de Spuibak Verticaal 1 positie
-      posY++; //Maak de Var 1 waarde hoger
+      posY = posY+1; //Maak de Var 1 waarde hoger
     } 
-    else if (posX >= ResX and posY >= ResY)   //Controleer of de Spuitbak De laatste positie heeft bereikt
-    {
-      Done = 2; //Eindig het psuit programma
-    }
   }
   else if (digitalRead(PinStart) == 1)  //Als het programma gepauseerd is contreel of de pause knop terug wordt ingedrukt
   {
