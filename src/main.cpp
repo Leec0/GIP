@@ -27,7 +27,7 @@ long TotStepsY = 0;
 
 byte Done = 0;  //Variabele voor programma logica
 byte pause = 0;
-byte Skip = 0;
+long Skip = -1;
 
 /*
 Idee Foto naar matrix: programma LCD Image convertor gebruiken voor een matrix te krijgen
@@ -61,7 +61,7 @@ void setup()    //Alle pinnen juist instellen
   myservo.write(80);
 
   Done = 0;   //Variabele Resetten naar 0
-  Skip = 0;
+  Skip = -1;
   pause = 0;
 }
 
@@ -156,21 +156,54 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
     {
       while (digitalRead(PinStart) == 0) {}   //Wacht tot de pauzeknop terug is uitgedrukt
       pause = 1;                              //Pauzeer het programma
+      delay(25);
     }
+    if (Skip == -1)
+    {
+      for (long i = (posX*ResX); i >= ((posX+1)*ResX)-1; i++)
+      {
+        uint8_t Pixel = pgm_read_byte(&image[i]);
+        if (Pixel == 1)
+        {
+          Skip = i;
+        }
+        else if(Skip <= -1)
+        {
+          Skip = -2;
+        }
+      }
+    }
+    Serial.println(Skip);
     uint8_t Pixel = pgm_read_byte(&image[posX*ResX+posY]);  //slaag de waarde van 1 Pixel van de foto op in aparte variabele
     if (Pixel == 1) //Controleer of die waarde overeenkomt met een 1
     {
       spuitkop();   //Als die waarde 1 is Spuit op die positie
-      Skip = 1;
     }
-    Serial.println("Y: "); Serial.print(posY);
-    Serial.println("X: "); Serial.print(posX);
-    Serial.println(((posX*ResX+posY)/(ResX*ResY))*100); Serial.print("%");
-    if (posX >= ResX and posY >= ResY)   //Controleer of de spuitkop de laatste positie heeft bereikt
+    Serial.println(posY);
+    Serial.println(posX);
+    Serial.println(posX*ResX+posY);
+    Serial.println(((posX*ResX+posY)/(ResX*ResY-1))*100);
+    if (posX >= ResX-1 and (posY >= ResY-1 or posX*ResX+posY > Skip))   //Controleer of de spuitkop de laatste positie heeft bereikt
     {
+      digitalWrite(DirY,HIGH);
+      do                          //Beweeg naar boven tot end switch
+      {
+        digitalWrite(StepY,HIGH);
+        delayMicroseconds(50);
+        digitalWrite(StepY,LOW);
+        delayMicroseconds(50);
+      } while(digitalRead(PinEndYm) == 0);
+      digitalWrite(DirX,HIGH);
+      do                              //Motor gaat naar de motor kant bewegen tot end switch
+      {
+        digitalWrite(StepX,HIGH);
+        delayMicroseconds(50);
+        digitalWrite(StepX,LOW);
+        delayMicroseconds(50);
+      } while(digitalRead(PinEndXm) == 0);
       Done = 2; //Eindig het tekenprogramma
     }
-    else if (posY >= ResY)  //Controleer of de spuitkop op het einde is in de verticale positie
+    else if (posY >= ResY-1 or posX*ResX+posY > Skip)  //Controleer of de spuitkop op het einde is in de verticale positie
     {
       digitalWrite(DirY,HIGH);
       do                          //Beweeg naar boven tot end switch
@@ -181,20 +214,22 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
         delayMicroseconds(50);
       } while(digitalRead(PinEndYm) == 0);
       Step(LOW,DirX,StepX,(TotStepsX/ResX)); //Beweeg de spuitkop horizontaal 1 positie
+      Step(LOW,DirY,StepY,500);
       posY = 0;
-      posX = posX+1; //Maak de variabele 1 waarde hoger
-      Skip = 1;
+      posX++; //Maak de variabele 1 waarde hoger
+      Skip = -1;
     }
-    else if(posY < ResY)  //Controleer of de spuitkop nog niet op het einde is in verticale positie
+    else if(posY < ResY-1)  //Controleer of de spuitkop nog niet op het einde is in verticale positie
     {
       Step(LOW,DirY,StepY,(TotStepsY/ResY));  //Beweeg de spuitkop verticaal 1 positie
-      posY = posY+1; //Maak de Var 1 waarde hoger
+      posY++; //Maak de Var 1 waarde hoger
     } 
   }
   else if (pause == 1 and digitalRead(PinStart) == 1)  //Als het programma gepauzeerd is controleer of de pauzeknop terug wordt ingedrukt
   {
     while (digitalRead(PinStart) == 0) {}   //Wacht tot de pauzeknop terug is uitgedrukt
     pause = 0;                              //ga verder met het programma
+    delay(25);
   }
 }
 
@@ -213,6 +248,7 @@ void loop()
     {
      TotStepsY = TotStepsYp - 5000;
     }
+    TotStepsX = TotStepsX - 200;
     posX = 0; //Zet de positie op de start positie
     posY = 0;
     Serial.println(TotStepsX);
@@ -227,6 +263,8 @@ void loop()
     while (digitalRead(PinStart) == 1) {} //Wacht tot de startknop is ingedrukt en uitgedrukt
     while (digitalRead(PinStart) == 0) {}
     Serial.println("Starten Tekenen");
+    Step(LOW,DirX,StepX,100);
+    Step(LOW,DirY,StepY,500);
     do  //Herhaal het tekenprogramma totdat het klaar is
     {
       Tekenen();  //Start het tekenprogramma
