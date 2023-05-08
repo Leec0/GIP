@@ -1,7 +1,7 @@
 #include <Arduino.h>      //library voor Arduino code te laten werken
 #include <Servo.h>        //library voor de Servo te laten werken
 #include <avr/pgmspace.h> //library voor grote variable op te slaan in het Flash geheugen
-#include "sjb-logo.hpp"   //eigen library die verwijst naar de image variable
+#include "test.hpp"   //eigen library die verwijst naar de image variable
 
 const byte StepX = 2;     //Variable die bepalen wat op welke pin is ingesteld
 const byte DirX = 5;
