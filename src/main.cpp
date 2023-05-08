@@ -1,17 +1,17 @@
 #include <Arduino.h>      //library voor Arduino code te laten werken
 #include <Servo.h>        //library voor de Servo te laten werken
 #include <avr/pgmspace.h> //library voor grote variable op te slaan in het Flash geheugen
-#include "test.hpp"   //eigen library die verwijst naar de image variable
+#include "test.hpp"       //eigen library die verwijst naar de image variable
 
-const byte StepX = 2;     //Variable die bepalen wat op welke pin is ingesteld
+const byte StepX = 2;     //Variabelen die bepalen wat op welke pin is ingesteld
 const byte DirX = 5;
 const byte StepY = 3;
 const byte DirY = 6;
 const byte ServoPin = 11; //Z end Stop CNC Shield
-const byte PinEndXm = 13; //SpnDir pin CNC Shield niet motor kant
-const byte PinEndXp = 9; //X end stop pin CNC Shield motor kant
-const byte PinEndYm = 12; //SpnEn pin CNC Shield boven kant
-const byte PinEndYp = 10; //Y end stop pin CNC Shield onder kant
+const byte PinEndXm = 13; //SpnDir pin CNC Shield niet motorkant
+const byte PinEndXp = 9; //X end stop pin CNC Shield motorkant
+const byte PinEndYm = 12; //SpnEn pin CNC Shield bovenkant
+const byte PinEndYp = 10; //Y end stop pin CNC Shield onderkant
 const byte PinStart = 16; //HOLD pin CNC Shield
 
 Servo myservo;  //instellingen voor Servo
@@ -44,7 +44,7 @@ Hierdoor gaat het printen van het ontwerp minder lang duren
 
 void setup()    //Alle pinnen juist instellen
 {
-  pinMode(StepX,OUTPUT);  //instellen pinnen voor stapper motoren
+  pinMode(StepX,OUTPUT);  //instellen pinnen voor stappenmotors
   pinMode(DirX,OUTPUT);
   pinMode(StepY,OUTPUT);
   pinMode(DirY,OUTPUT);
@@ -54,34 +54,33 @@ void setup()    //Alle pinnen juist instellen
   pinMode(PinEndYp,INPUT_PULLUP);
   pinMode(PinStart, INPUT_PULLUP);
 
-  Serial.begin(9600);   //Het starten van de Seriele monitor om het programma te kunnen volgen op de PC
+  Serial.begin(9600);   //Het starten van de Seriële monitor om het programma te kunnen volgen op de PC
 
   myservo.attach(ServoPin);   //instellen pin voor Servo motor
 
   myservo.write(80);
 
-  Done = 0;   //Variabele Reseten naar 0
+  Done = 0;   //Variabele Resetten naar 0
   Skip = 0;
   pause = 0;
 }
 
 void spuitkop()   //Programma dat de spuitkop 1 keer laat spuiten
 {
-  for (pos = 80; pos >= 50; pos -= 1) {      // goes from 80 degrees to 50 degrees
-    myservo.write(pos);                      // tell servo to go to position in variable 'pos'
-    delay(15);                               // waits 15ms for the servo to reach the position
+  for (pos = 80; pos >= 50; pos -= 1) {      // gaat van 80 graden naar 50 graden
+    myservo.write(pos);                      // geeft opdracht aan servo om naar positie ‘pos’ te gaan 
+    delay(15);                               // wacht 15ms 
   }
   delay(50);
-    for (pos = 50; pos <= 80; pos += 1) {   // goes from 50 degrees to 80 degrees
-    myservo.write(pos);                     // tell servo to go to position in variable 'pos'
-    delay(15);                              // waits 15ms for the servo to reach the position
+    for (pos = 50; pos <= 80; pos += 1) {   // gaat van 50 graden naar 80 graden
+    myservo.write(pos);                     // geeft opdracht aan servo om naar positie ‘pos’ te gaan
+    delay(15);                              // wacht 15ms
   }
 }
 
-void Step(boolean dir, byte DirPin, byte StepPin, long Steps) //Programma om een stepper motor x aantal stappen te doen draaien
-{                                                             //Gebruik: Step([HIGH=Clockwis,LOW=counter clockwise],[DirX,Diry],[StepX,StepY],Aantal Steps)
+void Step(boolean dir, byte DirPin, byte StepPin, long Steps) //Programma om een stappenmotor x aantal stappen te doen draaien
+{ //Gebruik: Step([HIGH=Clockwise, LOW=counter clockwise], [DirX,Diry], [StepX,StepY], Aantal Steps)
   digitalWrite(DirPin,dir);         //Zet rotatie richting voor gevraagde motor
-
   for (int i = 0; i < Steps; i++)   //Zet aantal stappen
   {
     digitalWrite(StepPin,HIGH);
@@ -114,7 +113,7 @@ void TotalStepsY()  //Programma voor het totaal aantal stappen te meten in de ve
   } while(digitalRead(PinEndYm) == 0);
 }
 
-void TotalSteps() //Programma om het totaal aanstal stappen te meten
+void TotalSteps() //Programma om het totaal aantal stappen te meten
 {
   digitalWrite(DirY,HIGH);
   do                          //Beweeg naar boven tot end switch
@@ -126,7 +125,7 @@ void TotalSteps() //Programma om het totaal aanstal stappen te meten
   } while(digitalRead(PinEndYm) == 0);
   TotStepsX = 0;                  //Reset het Totaal aantal steps
   digitalWrite(DirX,LOW);
-  do                              //Motor gaat naar niet motor kant bewegen tot end switch
+  do                              //Motor gaat naar niet motorkant bewegen tot end switch
   {
     digitalWrite(StepX,HIGH);
     delayMicroseconds(50);
@@ -134,7 +133,7 @@ void TotalSteps() //Programma om het totaal aanstal stappen te meten
     delayMicroseconds(50);
   } while(digitalRead(PinEndXp) == 0);
   TotalStepsY();                  //Het programma voor de verticale stappen te meten wordt gestart
-  TotStepsYm = TotStepsY;         //Het totaal aantal stappen in de Verticale richting wordt opgeslagen
+  TotStepsYm = TotStepsY;         //Het totaal aantal stappen in de verticale richting wordt opgeslagen
   digitalWrite(DirX,HIGH);
   do                              //Motor gaat naar de ander kant bewegen tot end switch en telt bij elke stap
   {
@@ -145,45 +144,33 @@ void TotalSteps() //Programma om het totaal aanstal stappen te meten
     TotStepsX++;
   } while(digitalRead(PinEndXm) == 0);
   TotalStepsY();                //Het programma voor de verticale stappen te meten wordt gestart
-  TotStepsYp = TotStepsY;       //Het totaal aantal stappen in de Verticale richting wordt opgeslagen
+  TotStepsYp = TotStepsY;       //Het totaal aantal stappen in de verticale richting wordt opgeslagen
   Serial.println("Stappen tellen klaar.");
 }
 
 void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten tekenen
 {
-  if (pause == 0) //Controleer of het programma niet gepauseerd is
+  if (pause == 0) //Controleer of het programma niet gepauzeerd is
   {
-    if (digitalRead(PinStart) == 1) //Kijk of de pause knop wordt ingedrukt
+    if (digitalRead(PinStart) == 1) //Kijk of de pauzeknop wordt ingedrukt
     {
-      while (digitalRead(PinStart) == 0) {}   //Wacht to de pasue knop terug is uitgedrukt
-      pause = 1;                              //Pauseer het programma
+      while (digitalRead(PinStart) == 0) {}   //Wacht tot de pauzeknop terug is uitgedrukt
+      pause = 1;                              //Pauzeer het programma
     }
-    uint8_t Pixel = pgm_read_byte(&image[posX*ResX+posY]);  //slaag de waarde van 1 Pixel van de foto op in aparte Var
+    uint8_t Pixel = pgm_read_byte(&image[posX*ResX+posY]);  //slaag de waarde van 1 Pixel van de foto op in aparte variabele
     if (Pixel == 1) //Controleer of die waarde overeenkomt met een 1
     {
       spuitkop();   //Als die waarde 1 is Spuit op die positie
       Skip = 1;
     }
-    /*for (long i = posX*ResY+posY+1; i >= (posX+1)*ResY-1; i++ and Skip == 1) //Loop om te controleren of de reste van een kolom leeg is
-    {                                                                        //Loopt tot de hele rij is gecontroleerd en stopt als er nog in positie is die wel gespuit moet worden
-      uint8_t Pixel = pgm_read_byte(&image[i]);
-      if (Pixel == 0) //Controle Pixel Foto = leeg?
-      {
-        Skip = 1;     //indien leeg maak de Skip var 1
-      }
-      else if (Pixel == 1)  //Controleer Pixel foto = waar?
-      {
-        Skip = 0;           //indien waar maak de Skip var 0 en stop met verdere controle
-      }
-    }*/
     Serial.println("Y: "); Serial.print(posY);
     Serial.println("X: "); Serial.print(posX);
     Serial.println(((posX*ResX+posY)/(ResX*ResY))*100); Serial.print("%");
-    if (posX >= ResX and posY >= ResY)   //Controleer of de Spuitbak De laatste positie heeft bereikt
+    if (posX >= ResX and posY >= ResY)   //Controleer of de spuitkop de laatste positie heeft bereikt
     {
-      Done = 2; //Eindig het psuit programma
+      Done = 2; //Eindig het tekenprogramma
     }
-    else if (posY >= ResY)  //Controleer of de Spuitkop op het einde is in de verticale positie
+    else if (posY >= ResY)  //Controleer of de spuitkop op het einde is in de verticale positie
     {
       digitalWrite(DirY,HIGH);
       do                          //Beweeg naar boven tot end switch
@@ -193,27 +180,27 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
         digitalWrite(StepY,LOW);
         delayMicroseconds(50);
       } while(digitalRead(PinEndYm) == 0);
-      Step(LOW,DirX,StepX,(TotStepsX/ResX)); //Beweeg de spuitbak horizontaal 1 positie
+      Step(LOW,DirX,StepX,(TotStepsX/ResX)); //Beweeg de spuitkop horizontaal 1 positie
       posY = 0;
-      posX = posX+1; //Maak de Var 1 waarde hoger
+      posX = posX+1; //Maak de variabele 1 waarde hoger
       Skip = 1;
     }
-    else if(posY < ResY)  //Controleer of de Spuitkop nog niet op het einde is in verticale positie
+    else if(posY < ResY)  //Controleer of de spuitkop nog niet op het einde is in verticale positie
     {
-      Step(LOW,DirY,StepY,(TotStepsY/ResY));  //Beweeg de Spuibak Verticaal 1 positie
+      Step(LOW,DirY,StepY,(TotStepsY/ResY));  //Beweeg de spuitkop verticaal 1 positie
       posY = posY+1; //Maak de Var 1 waarde hoger
     } 
   }
-  else if (pause == 1 and digitalRead(PinStart) == 1)  //Als het programma gepauseerd is contreel of de pause knop terug wordt ingedrukt
+  else if (pause == 1 and digitalRead(PinStart) == 1)  //Als het programma gepauzeerd is controleer of de pauzeknop terug wordt ingedrukt
   {
-    while (digitalRead(PinStart) == 0) {}   //Wacht to de pause knop terug is uitgedrukt
-    pause = 0;                              //Onpauseer het programma
+    while (digitalRead(PinStart) == 0) {}   //Wacht tot de pauzeknop terug is uitgedrukt
+    pause = 0;                              //ga verder met het programma
   }
 }
 
 void loop()
 {
-  if (Done == 0)  //Controleer of het Kalibreren  al is gebeurd
+  if (Done == 0)  //Controleer of het kalibreren  al is gebeurd
   {
     Serial.println("Wachten voor Kalibreren");
     while (digitalRead(PinStart) == 1) {} //Wacht tot de start knop wordt ingedrukt
@@ -232,17 +219,17 @@ void loop()
     Serial.println(TotStepsYp);
     Serial.println(TotStepsYm);
     Serial.println(TotStepsY);
-    Done = 1;    //Varibale om te zeggen dat het totale aantal stappen gemeten is
+    Done = 1;    //Variabele om te zeggen dat het totale aantal stappen gemeten is
   }
-  else if (Done != 0) //Controleer of de Calibratie is gebeurd
+  else if (Done != 0) //Controleer of de kalibratie is gebeurd
   {
     Serial.println("Wachten voor Tekenen");
-    while (digitalRead(PinStart) == 1) {} //Wacht to de Start knop is ingedrukt en uitgedrukt
+    while (digitalRead(PinStart) == 1) {} //Wacht tot de startknop is ingedrukt en uitgedrukt
     while (digitalRead(PinStart) == 0) {}
     Serial.println("Starten Tekenen");
-    do  //Herhaal het teken programma todat het klaar is
+    do  //Herhaal het tekenprogramma totdat het klaar is
     {
-      Tekenen();  //Start het teken programma
+      Tekenen();  //Start het tekenprogramma
     } while (Done != 2);
     Serial.println("Tekening klaar");
   }
