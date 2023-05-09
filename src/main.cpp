@@ -154,15 +154,15 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
   {
     if (digitalRead(PinStart) == 1) //Kijk of de pauzeknop wordt ingedrukt
     {
-      while (digitalRead(PinStart) == 0) {}   //Wacht tot de pauzeknop terug is uitgedrukt
+      while (digitalRead(PinStart) == 1) {}   //Wacht tot de pauzeknop terug is uitgedrukt
       pause = 1;                              //Pauzeer het programma
       delay(25);
     }
-    if (Skip == -1)
+    if (Skip == -1 and posX < ResX-1)
     {
-      for (long i = (posX*ResX); i >= ((posX+1)*ResX)-1; i++)
+      for (long i = 0; i >= ResY; i++)
       {
-        uint8_t Pixel = pgm_read_byte(&image[i]);
+        uint8_t Pixel = pgm_read_byte(&image[posX*ResX+i]);
         if (Pixel == 1)
         {
           Skip = i;
@@ -173,7 +173,6 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
         }
       }
     }
-    Serial.println(Skip);
     uint8_t Pixel = pgm_read_byte(&image[posX*ResX+posY]);  //slaag de waarde van 1 Pixel van de foto op in aparte variabele
     if (Pixel == 1) //Controleer of die waarde overeenkomt met een 1
     {
@@ -181,9 +180,8 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
     }
     Serial.println(posY);
     Serial.println(posX);
-    Serial.println(posX*ResX+posY);
     Serial.println(((posX*ResX+posY)/(ResX*ResY-1))*100);
-    if (posX >= ResX-1 and (posY >= ResY-1 or posX*ResX+posY > Skip))   //Controleer of de spuitkop de laatste positie heeft bereikt
+    if (posX >= ResX-1 and posY >= ResY-1)   //Controleer of de spuitkop de laatste positie heeft bereikt
     {
       digitalWrite(DirY,HIGH);
       do                          //Beweeg naar boven tot end switch
@@ -203,9 +201,25 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
       } while(digitalRead(PinEndXm) == 0);
       Done = 2; //Eindig het tekenprogramma
     }
-    else if (posY >= ResY-1 or posX*ResX+posY > Skip)  //Controleer of de spuitkop op het einde is in de verticale positie
+    else if (posY >= ResY-1)  //Controleer of de spuitkop op het einde is in de verticale positie
     {
       digitalWrite(DirY,HIGH);
+      do                          //Beweeg naar boven tot end switch
+      {
+        digitalWrite(StepY,HIGH);
+        delayMicroseconds(50);
+        digitalWrite(StepY,LOW);
+        delayMicroseconds(50);
+      } while(digitalRead(PinEndYm) == 0);
+      Step(LOW,DirX,StepX,(TotStepsX/ResX)); //Beweeg de spuitkop horizontaal 1 positie
+      Step(LOW,DirY,StepY,500);
+      posY = 0;
+      posX++; //Maak de variabele 1 waarde hoger
+      Skip = -1;
+    }
+    else if (posY > Skip and Skip >= 0)
+    {
+       digitalWrite(DirY,HIGH);
       do                          //Beweeg naar boven tot end switch
       {
         digitalWrite(StepY,HIGH);
@@ -227,7 +241,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
   }
   else if (pause == 1 and digitalRead(PinStart) == 1)  //Als het programma gepauzeerd is controleer of de pauzeknop terug wordt ingedrukt
   {
-    while (digitalRead(PinStart) == 0) {}   //Wacht tot de pauzeknop terug is uitgedrukt
+    while (digitalRead(PinStart) == 1) {}   //Wacht tot de pauzeknop terug is uitgedrukt
     pause = 0;                              //ga verder met het programma
     delay(25);
   }
