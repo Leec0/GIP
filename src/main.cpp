@@ -171,6 +171,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
         {
           Skip = -2;
         }
+        Serial.println(Skip);
       }
     }
     uint8_t Pixel = pgm_read_byte(&image[posX*ResX+posY]);  //slaag de waarde van 1 Pixel van de foto op in aparte variabele
