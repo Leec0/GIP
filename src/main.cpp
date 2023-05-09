@@ -160,7 +160,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
     }
     if (Skip == -1 and posX < ResX-1)
     {
-      for (long i = 0; i >= ResY; i++)
+      for (long i = 0; i >= ResY-1; i++)
       {
         uint8_t Pixel = pgm_read_byte(&image[posX*ResX+i]);
         if (Pixel == 1)
