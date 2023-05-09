@@ -69,12 +69,12 @@ void spuitkop()   //Programma dat de spuitkop 1 keer laat spuiten
 {
   for (pos = 80; pos >= 50; pos -= 1) {      // gaat van 80 graden naar 50 graden
     myservo.write(pos);                      // geeft opdracht aan servo om naar positie ‘pos’ te gaan 
-    delay(15);                               // wacht 15ms 
+    delay(10);                               // wacht 15ms 
   }
-  delay(50);
+  delay(25);
     for (pos = 50; pos <= 80; pos += 1) {   // gaat van 50 graden naar 80 graden
     myservo.write(pos);                     // geeft opdracht aan servo om naar positie ‘pos’ te gaan
-    delay(15);                              // wacht 15ms
+    delay(10);                              // wacht 15ms
   }
 }
 
