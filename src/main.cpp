@@ -1,7 +1,7 @@
 #include <Arduino.h>      //library voor Arduino code te laten werken
 #include <Servo.h>        //library voor de Servo te laten werken
 #include <avr/pgmspace.h> //library voor grote variable op te slaan in het Flash geheugen
-#include "test.hpp"       //eigen library die verwijst naar de image variable
+#include "sjb-logo.hpp"       //eigen library die verwijst naar de image variable
 
 const byte StepX = 2;     //Variabelen die bepalen wat op welke pin is ingesteld
 const byte DirX = 5;
@@ -27,7 +27,7 @@ long TotStepsY = 0;
 
 byte Done = 0;  //Variabele voor programma logica
 byte pause = 0;
-long Skip = -1;
+int Skip = -1;
 
 /*
 Idee Foto naar matrix: programma LCD Image convertor gebruiken voor een matrix te krijgen
@@ -58,7 +58,7 @@ void setup()    //Alle pinnen juist instellen
 
   myservo.attach(ServoPin);   //instellen pin voor Servo motor
 
-  myservo.write(80);
+  myservo.write(65);
 
   Done = 0;   //Variabele Resetten naar 0
   Skip = -1;
@@ -67,14 +67,13 @@ void setup()    //Alle pinnen juist instellen
 
 void spuitkop()   //Programma dat de spuitkop 1 keer laat spuiten
 {
-  for (pos = 80; pos >= 50; pos -= 1) {      // gaat van 80 graden naar 50 graden
+  for (pos = 65; pos >= 35; pos -= 1) {      // gaat van 80 graden naar 50 graden
     myservo.write(pos);                      // geeft opdracht aan servo om naar positie ‘pos’ te gaan 
-    delay(10);                               // wacht 15ms 
+    delay(2);                               // wacht 15ms 
   }
-  delay(25);
-    for (pos = 50; pos <= 80; pos += 1) {   // gaat van 50 graden naar 80 graden
+  for (pos = 35; pos <= 65; pos += 1) {   // gaat van 50 graden naar 80 graden
     myservo.write(pos);                     // geeft opdracht aan servo om naar positie ‘pos’ te gaan
-    delay(10);                              // wacht 15ms
+    delay(2);                              // wacht 15ms
   }
 }
 
@@ -152,26 +151,28 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
 {
   if (pause == 0) //Controleer of het programma niet gepauzeerd is
   {
-    if (digitalRead(PinStart) == 1) //Kijk of de pauzeknop wordt ingedrukt
+    if (digitalRead(PinStart) == 0) //Kijk of de pauzeknop wordt ingedrukt
     {
-      while (digitalRead(PinStart) == 1) {}   //Wacht tot de pauzeknop terug is uitgedrukt
+      while (digitalRead(PinStart) == 0) {}   //Wacht tot de pauzeknop terug is uitgedrukt
       pause = 1;                              //Pauzeer het programma
       delay(25);
     }
     if (Skip == -1 and posX < ResX-1)
     {
-      for (long i = 0; i >= ResY-1; i++)
+      for (int i = ResY-1; i >= 0; i--)
       {
-        uint8_t Pixel = pgm_read_byte(&image[posX*ResX+i]);
-        if (Pixel == 1)
+        if (Skip == -1)
         {
-          Skip = i;
+           uint8_t Pixel = pgm_read_byte(&image[posX*ResX+i]);
+          if (Pixel == 1)
+          {
+            Skip = i;
+          }
         }
-        else if(Skip <= -1)
-        {
-          Skip = -2;
-        }
-        Serial.println(Skip);
+      }
+      if (Skip == -1)
+      {
+        Skip = 0;
       }
     }
     uint8_t Pixel = pgm_read_byte(&image[posX*ResX+posY]);  //slaag de waarde van 1 Pixel van de foto op in aparte variabele
@@ -184,6 +185,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
     Serial.println(((posX*ResX+posY)/(ResX*ResY-1))*100);
     if (posX >= ResX-1 and posY >= ResY-1)   //Controleer of de spuitkop de laatste positie heeft bereikt
     {
+      delay(500);
       digitalWrite(DirY,HIGH);
       do                          //Beweeg naar boven tot end switch
       {
@@ -204,6 +206,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
     }
     else if (posY >= ResY-1)  //Controleer of de spuitkop op het einde is in de verticale positie
     {
+      delay(500);
       digitalWrite(DirY,HIGH);
       do                          //Beweeg naar boven tot end switch
       {
@@ -220,6 +223,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
     }
     else if (posY > Skip and Skip >= 0)
     {
+      delay(500);
        digitalWrite(DirY,HIGH);
       do                          //Beweeg naar boven tot end switch
       {
@@ -240,9 +244,9 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
       posY++; //Maak de Var 1 waarde hoger
     } 
   }
-  else if (pause == 1 and digitalRead(PinStart) == 1)  //Als het programma gepauzeerd is controleer of de pauzeknop terug wordt ingedrukt
+  else if (pause == 1 and digitalRead(PinStart) == 0)  //Als het programma gepauzeerd is controleer of de pauzeknop terug wordt ingedrukt
   {
-    while (digitalRead(PinStart) == 1) {}   //Wacht tot de pauzeknop terug is uitgedrukt
+    while (digitalRead(PinStart) == 0) {}   //Wacht tot de pauzeknop terug is uitgedrukt
     pause = 0;                              //ga verder met het programma
     delay(25);
   }
