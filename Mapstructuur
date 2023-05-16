@@ -1,0 +1,9 @@
+|--src
+|   |--main.cpp
+|--lib
+|   |--SJB-logo
+|   |   |--sjb-logo.cpp
+|   |   |--sjb-logo.hpp
+|   |--Test
+|   |   |--test.cpp
+|   |   |--test.hpp

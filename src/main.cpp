@@ -15,7 +15,7 @@ const byte PinEndYp = 10; //Y end stop pin CNC Shield onderkant
 const byte PinStart = 16; //HOLD pin CNC Shield
 
 Servo myservo;  //instellingen voor Servo
-byte pos = 80; //positie variabele voor Servo
+byte pos = 65; //positie variabele voor Servo
 
 long posX = 0;  //positie variabele voor de Spuitkop
 long posY = 0;
@@ -28,6 +28,7 @@ long TotStepsY = 0;
 byte Done = 0;  //Variabele voor programma logica
 byte pause = 0;
 int Skip = -1;
+int Schudden = 0;
 
 /*
 Idee Foto naar matrix: programma LCD Image convertor gebruiken voor een matrix te krijgen
@@ -42,7 +43,7 @@ of kijken of dat de rest van de kolom nul is om terug naar boven te gaan en naar
 Hierdoor gaat het printen van het ontwerp minder lang duren
 */
 
-void setup()    //Alle pinnen juist instellen
+void setup()
 {
   pinMode(StepX,OUTPUT);  //instellen pinnen voor stappenmotors
   pinMode(DirX,OUTPUT);
@@ -56,23 +57,23 @@ void setup()    //Alle pinnen juist instellen
 
   Serial.begin(9600);   //Het starten van de Seriële monitor om het programma te kunnen volgen op de PC
 
-  myservo.attach(ServoPin);   //instellen pin voor Servo motor
-
-  myservo.write(65);
+  myservo.attach(ServoPin);   //instellen pin voor Servo motor 
+  myservo.write(pos);
 
   Done = 0;   //Variabele Resetten naar 0
   Skip = -1;
   pause = 0;
+  Schudden = 0;
 }
 
 void spuitkop()   //Programma dat de spuitkop 1 keer laat spuiten
 {
-  for (pos = 65; pos >= 35; pos -= 1) {      // gaat van 80 graden naar 50 graden
+  for (pos = 65; pos >= 35; pos -= 1) {      // gaat van 65 graden naar 35 graden
     myservo.write(pos);                      // geeft opdracht aan servo om naar positie ‘pos’ te gaan 
     delay(2);                               // wacht 15ms 
   }
-  for (pos = 35; pos <= 65; pos += 1) {   // gaat van 50 graden naar 80 graden
-    myservo.write(pos);                     // geeft opdracht aan servo om naar positie ‘pos’ te gaan
+  for (pos = 35; pos <= 65; pos += 1) {    // gaat van 35 graden naar 65 graden
+    myservo.write(pos);                    // geeft opdracht aan servo om naar positie ‘pos’ te gaan
     delay(2);                              // wacht 15ms
   }
 }
@@ -157,9 +158,19 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
       pause = 1;                              //Pauzeer het programma
       delay(25);
     }
+    if (Schudden >= 20)
+    {
+      Step(LOW,DirY,StepY,3000);
+      Serial.println("Schud met de spuitbus");
+      Serial.println("Wachten voor Herstarten");
+      while (digitalRead(PinStart) == 1) {}
+      while (digitalRead(PinStart) == 0) {}
+      Step(HIGH,DirY,StepY,3000);
+      Schudden = 0;
+    }
     if (Skip == -1 and posX < ResX-1)
     {
-      for (int i = ResY-1; i >= 0; i--)
+      for (int i = ResY-1; i > 0; i--)
       {
         if (Skip == -1)
         {
@@ -178,6 +189,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
     uint8_t Pixel = pgm_read_byte(&image[posX*ResX+posY]);  //slaag de waarde van 1 Pixel van de foto op in aparte variabele
     if (Pixel == 1) //Controleer of die waarde overeenkomt met een 1
     {
+      delay(10);
       spuitkop();   //Als die waarde 1 is Spuit op die positie
     }
     Serial.println(posY);
@@ -219,6 +231,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
       Step(LOW,DirY,StepY,500);
       posY = 0;
       posX++; //Maak de variabele 1 waarde hoger
+      Schudden++;
       Skip = -1;
     }
     else if (posY > Skip and Skip >= 0)
@@ -236,6 +249,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
       Step(LOW,DirY,StepY,500);
       posY = 0;
       posX++; //Maak de variabele 1 waarde hoger
+      Schudden++;
       Skip = -1;
     }
     else if(posY < ResY-1)  //Controleer of de spuitkop nog niet op het einde is in verticale positie
@@ -254,6 +268,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
 
 void loop()
 {
+  Serial.println(22/20);
   if (Done == 0)  //Controleer of het kalibreren  al is gebeurd
   {
     Serial.println("Wachten voor Kalibreren");
@@ -280,6 +295,7 @@ void loop()
   {
     Serial.println("Wachten voor Tekenen");
     while (digitalRead(PinStart) == 1) {} //Wacht tot de startknop is ingedrukt en uitgedrukt
+    delay(10);
     while (digitalRead(PinStart) == 0) {}
     Serial.println("Starten Tekenen");
     Step(LOW,DirX,StepX,100);
