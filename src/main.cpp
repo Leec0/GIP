@@ -1,7 +1,7 @@
 #include <Arduino.h>      //library voor Arduino code te laten werken
 #include <Servo.h>        //library voor de Servo te laten werken
 #include <avr/pgmspace.h> //library voor grote variable op te slaan in het Flash geheugen
-#include "sjb-logo.hpp"       //eigen library die verwijst naar de image variable
+#include "planneet.hpp"       //eigen library die verwijst naar de image variable
 
 const byte StepX = 2;     //Variabelen die bepalen wat op welke pin is ingesteld
 const byte DirX = 5;
@@ -165,7 +165,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
       Serial.println("Wachten voor Herstarten");
       while (digitalRead(PinStart) == 1) {}
       while (digitalRead(PinStart) == 0) {}
-      Step(HIGH,DirY,StepY,3000);
+      Step(HIGH,DirY,StepY,20000);
       Schudden = 0;
     }
     if (Skip == -1 and posX < ResX-1)
