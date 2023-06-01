@@ -1,4 +1,4 @@
-#include "Presentatie1.hpp"
+#include "presentatie1.hpp"
 
 int ResY = 64;
 int ResX = 64;
