@@ -1,7 +1,7 @@
 #include <Arduino.h>      //library voor Arduino code te laten werken
 #include <Servo.h>        //library voor de Servo te laten werken
 #include <avr/pgmspace.h> //library voor grote variable op te slaan in het Flash geheugen
-#include "planneet.hpp"       //eigen library die verwijst naar de image variable
+#include "Presentatie2.hpp"        //eigen library die verwijst naar de image variable
 
 const byte StepX = 2;     //Variabelen die bepalen wat op welke pin is ingesteld
 const byte DirX = 5;
@@ -15,7 +15,7 @@ const byte PinEndYp = 10; //Y end stop pin CNC Shield onderkant
 const byte PinStart = 16; //HOLD pin CNC Shield
 
 Servo myservo;  //instellingen voor Servo
-byte pos = 65; //positie variabele voor Servo
+byte pos = 70; //positie variabele voor Servo
 
 long posX = 0;  //positie variabele voor de Spuitkop
 long posY = 0;
@@ -68,11 +68,11 @@ void setup()
 
 void spuitkop()   //Programma dat de spuitkop 1 keer laat spuiten
 {
-  for (pos = 65; pos >= 35; pos -= 1) {      // gaat van 65 graden naar 35 graden
+  for (pos = 70; pos >= 35; pos -= 1) {      // gaat van 70 graden naar 35 graden
     myservo.write(pos);                      // geeft opdracht aan servo om naar positie ‘pos’ te gaan 
     delay(2);                               // wacht 15ms 
   }
-  for (pos = 35; pos <= 65; pos += 1) {    // gaat van 35 graden naar 65 graden
+  for (pos = 35; pos <= 70; pos += 1) {    // gaat van 35 graden naar 70 graden
     myservo.write(pos);                    // geeft opdracht aan servo om naar positie ‘pos’ te gaan
     delay(2);                              // wacht 15ms
   }
@@ -160,7 +160,7 @@ void Tekenen()  //Programma dat de printer een bepaalde tekening gaat laten teke
     }
     if (Schudden >= 20)
     {
-      Step(LOW,DirY,StepY,3000);
+      Step(LOW,DirY,StepY,20000);
       Serial.println("Schud met de spuitbus");
       Serial.println("Wachten voor Herstarten");
       while (digitalRead(PinStart) == 1) {}
